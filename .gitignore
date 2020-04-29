@@ -1,5 +1,4 @@
 .idea
-Gemfile.lock
 ext/nmatrix/dense/daxpy.c
 ext/nmatrix/dense/dgeco.c
 ext/nmatrix/dense/dgefa.c

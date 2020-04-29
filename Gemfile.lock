@@ -1,0 +1,63 @@
+GIT
+  remote: https://github.com/pocheptsov/packable.git
+  revision: ee9e18c77a258879e3ad4dbf91a95bda2117f9ac
+  specs:
+    packable (1.3.9)
+      backports
+
+PATH
+  remote: .
+  specs:
+    nmatrix (0.2.4)
+      packable (~> 1.3, >= 1.3.5)
+    nmatrix-atlas (0.2.4)
+      nmatrix (= 0.2.4)
+    nmatrix-fftw (0.2.4)
+      nmatrix (= 0.2.4)
+    nmatrix-lapacke (0.2.4)
+      nmatrix (= 0.2.4)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    backports (3.17.1)
+    coderay (1.1.2)
+    diff-lcs (1.3)
+    method_source (1.0.0)
+    pry (0.13.1)
+      coderay (~> 1.1)
+      method_source (~> 1.0)
+    rake (10.5.0)
+    rake-compiler (0.9.9)
+      rake
+    rdoc (4.3.0)
+    rspec (2.99.0)
+      rspec-core (~> 2.99.0)
+      rspec-expectations (~> 2.99.0)
+      rspec-mocks (~> 2.99.0)
+    rspec-core (2.99.2)
+    rspec-expectations (2.99.2)
+      diff-lcs (>= 1.1.3, < 2.0)
+    rspec-longrun (1.0.1)
+      rspec-core (>= 2.10.0)
+    rspec-mocks (2.99.4)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.6)
+  nmatrix!
+  nmatrix-atlas!
+  nmatrix-fftw!
+  nmatrix-lapacke!
+  packable (~> 1.3.9)!
+  pry (~> 0.10)
+  rake (~> 10.3)
+  rake-compiler (~> 0.8)
+  rdoc (~> 4.0, >= 4.0.1)
+  rspec (~> 2.14)
+  rspec-longrun (~> 1.0)
+
+BUNDLED WITH
+   1.17.3

@@ -24,7 +24,7 @@ Gem::Specification.new do |gem|
 ***********************************************************
 Welcome to SciRuby: Tools for Scientific Computing in Ruby!
 
-NMatrix requires a C/C++ compiler. Clang and GCC are 
+NMatrix requires a C/C++ compiler. Clang and GCC are
 recommended. JRuby support is experimental, and requires
 Java.
 
