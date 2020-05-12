@@ -32,7 +32,11 @@ require_relative 'lapack_ext_common'
 
 NMatrix.register_lapack_extension("nmatrix-lapacke")
 
-require "nmatrix_lapacke.so"
+begin
+  require "nmatrix_lapacke.so"
+rescue LoadError
+  require "#{Dir.pwd}/lib/nmatrix/nmatrix_lapacke.so"
+end
 
 class NMatrix
   #Add functions from the LAPACKE C extension to the main LAPACK and BLAS modules.
@@ -59,7 +63,7 @@ class NMatrix
         raise(ShapeError, "a must be square") unless a.dim == 2 && a.shape[0] == a.shape[1]
         raise(ShapeError, "number of rows of b must equal number of cols of a") unless a.shape[1] == b.shape[0]
         raise(StorageTypeError, "only works with dense matrices") unless a.stype == :dense && b.stype == :dense
-        raise(DataTypeError, "only works for non-integer, non-object dtypes") if 
+        raise(DataTypeError, "only works for non-integer, non-object dtypes") if
           a.integer_dtype? || a.object_dtype? || b.integer_dtype? || b.object_dtype?
 
         x     = b.clone
@@ -197,10 +201,10 @@ class NMatrix
 
   def solve(b, opts = {})
     raise(ShapeError, "Must be called on square matrix") unless self.dim == 2 && self.shape[0] == self.shape[1]
-    raise(ShapeError, "number of rows of b must equal number of cols of self") if 
+    raise(ShapeError, "number of rows of b must equal number of cols of self") if
       self.shape[1] != b.shape[0]
     raise(ArgumentError, "only works with dense matrices") if self.stype != :dense
-    raise(ArgumentError, "only works for non-integer, non-object dtypes") if 
+    raise(ArgumentError, "only works for non-integer, non-object dtypes") if
       integer_dtype? or object_dtype? or b.integer_dtype? or b.object_dtype?
 
     opts = { form: :general }.merge(opts)
@@ -208,7 +212,7 @@ class NMatrix
     n    = self.shape[0]
     nrhs = b.shape[1]
 
-    case opts[:form] 
+    case opts[:form]
     when :general
       clone = self.clone
       ipiv = NMatrix::LAPACK.lapacke_getrf(:row, n, n, clone, n)
@@ -235,13 +239,13 @@ class NMatrix
 
   #
   # call-seq:
-  #     geqrf! -> shape.min x 1 NMatrix 
+  #     geqrf! -> shape.min x 1 NMatrix
   #
-  # QR factorization of a general M-by-N matrix +A+. 
+  # QR factorization of a general M-by-N matrix +A+.
   #
   # The QR factorization is A = QR, where Q is orthogonal and R is Upper Triangular
-  # +A+ is overwritten with the elements of R and Q with Q being represented by the 
-  # elements below A's diagonal and an array of scalar factors in the output NMatrix. 
+  # +A+ is overwritten with the elements of R and Q with Q being represented by the
+  # elements below A's diagonal and an array of scalar factors in the output NMatrix.
   #
   # The matrix Q is represented as a product of elementary reflectors
   #     Q = H(1) H(2) . . . H(k), where k = min(m,n).
@@ -251,7 +255,7 @@ class NMatrix
   #     H(i) = I - tau * v * v'
   #
   # http://www.netlib.org/lapack/explore-html/d3/d69/dgeqrf_8f.html
-  # 
+  #
   # Only works for dense matrices.
   #
   # * *Returns* :
@@ -261,35 +265,35 @@ class NMatrix
   #
   def geqrf!
     raise(StorageTypeError, "LAPACK functions only work on dense matrices") unless self.dense?
-    
+
     tau = NMatrix.new([self.shape.min,1], dtype: self.dtype)
     NMatrix::LAPACK::lapacke_geqrf(:row, self.shape[0], self.shape[1], self, self.shape[1], tau)
-    
+
     tau
   end
-  
+
   #
   # call-seq:
   #     ormqr(tau) -> NMatrix
   #     ormqr(tau, side, transpose, c) -> NMatrix
   #
-  # Returns the product Q * c or c * Q after a call to geqrf! used in QR factorization. 
-  # +c+ is overwritten with the elements of the result NMatrix if supplied. Q is the orthogonal matrix 
+  # Returns the product Q * c or c * Q after a call to geqrf! used in QR factorization.
+  # +c+ is overwritten with the elements of the result NMatrix if supplied. Q is the orthogonal matrix
   # represented by tau and the calling NMatrix
-  # 
+  #
   # Only works on float types, use unmqr for complex types.
   #
   # == Arguments
   #
   # * +tau+ - vector containing scalar factors of elementary reflectors
   # * +side+ - direction of multiplication [:left, :right]
-  # * +transpose+ - apply Q with or without transpose [false, :transpose] 
+  # * +transpose+ - apply Q with or without transpose [false, :transpose]
   # * +c+ - NMatrix multplication argument that is overwritten, no argument assumes c = identity
   #
   # * *Returns* :
   #
-  #   - Q * c or c * Q Where Q may be transposed before multiplication. 
-  #    
+  #   - Q * c or c * Q Where Q may be transposed before multiplication.
+  #
   #
   # * *Raises* :
   #   - +StorageTypeError+ -> LAPACK functions only work on dense matrices.
@@ -305,7 +309,7 @@ class NMatrix
     #Default behaviour produces Q * I  = Q if c is not supplied.
     result = c ? c.clone : NMatrix.identity(self.shape[0], dtype: self.dtype)
     NMatrix::LAPACK::lapacke_ormqr(:row, side, transpose, result.shape[0], result.shape[1], tau.shape[0], self, self.shape[1], tau, result, result.shape[1])
-    
+
     result
   end
 
@@ -314,23 +318,23 @@ class NMatrix
   #     unmqr(tau) -> NMatrix
   #     unmqr(tau, side, transpose, c) -> NMatrix
   #
-  # Returns the product Q * c or c * Q after a call to geqrf! used in QR factorization. 
-  # +c+ is overwritten with the elements of the result NMatrix if it is supplied. Q is the orthogonal matrix 
+  # Returns the product Q * c or c * Q after a call to geqrf! used in QR factorization.
+  # +c+ is overwritten with the elements of the result NMatrix if it is supplied. Q is the orthogonal matrix
   # represented by tau and the calling NMatrix
-  # 
+  #
   # Only works on complex types, use ormqr for float types.
   #
   # == Arguments
   #
   # * +tau+ - vector containing scalar factors of elementary reflectors
   # * +side+ - direction of multiplication [:left, :right]
-  # * +transpose+ - apply Q as Q or its complex conjugate [false, :complex_conjugate] 
+  # * +transpose+ - apply Q as Q or its complex conjugate [false, :complex_conjugate]
   # * +c+ - NMatrix multplication argument that is overwritten, no argument assumes c = identity
   #
   # * *Returns* :
   #
-  #   - Q * c or c * Q Where Q may be transformed to its complex conjugate before multiplication. 
-  #    
+  #   - Q * c or c * Q Where Q may be transformed to its complex conjugate before multiplication.
+  #
   #
   # * *Raises* :
   #   - +StorageTypeError+ -> LAPACK functions only work on dense matrices.
@@ -345,7 +349,7 @@ class NMatrix
     #Default behaviour produces Q * I  = Q if c is not supplied.
     result = c ? c.clone : NMatrix.identity(self.shape[0], dtype: self.dtype)
     NMatrix::LAPACK::lapacke_unmqr(:row, side, transpose, result.shape[0], result.shape[1], tau.shape[0], self, self.shape[1], tau, result, result.shape[1])
-    
+
     result
   end
 
